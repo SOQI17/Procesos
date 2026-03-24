@@ -1,0 +1,100 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Outfit", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+
+  --color-brand-blue: #3b82f6;
+  --color-brand-purple: #8b5cf6;
+  --color-bg-dark: #080a0f;
+  --color-bg-card: #0d1018;
+  --color-bg-sidebar: #080a0f;
+
+  --color-primary: #00A3FF;
+  --color-cyan-accent: #00E5FF;
+  --color-surface: #0D1221;
+  --color-surface-2: #131A2E;
+}
+
+@layer base {
+  body {
+    @apply bg-bg-dark text-slate-200 antialiased font-sans;
+  }
+
+  h1, h2, h3, h4, .font-display {
+    @apply font-display;
+  }
+
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.14); }
+}
+
+@layer components {
+  .glass-panel {
+    @apply bg-white/[0.025] border border-white/[0.07] rounded-2xl;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white text-[11px] font-semibold tracking-[0.08em] uppercase rounded-xl px-5 h-10 cursor-pointer transition-all active:scale-[0.98] disabled:opacity-30 disabled:cursor-not-allowed;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 bg-white/[0.04] hover:bg-white/[0.07] text-white/40 hover:text-white/80 text-[11px] font-semibold tracking-[0.08em] uppercase border border-white/[0.09] rounded-xl px-5 h-10 cursor-pointer transition-all active:scale-[0.98];
+  }
+
+  .active-nav-item {
+    @apply bg-brand-blue/10 text-brand-blue border-r-2 border-brand-blue;
+  }
+
+  .bpmm-level {
+    @apply flex-1 flex items-center justify-center text-[10px] font-bold tracking-wider;
+  }
+
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 9999;
+    background: rgba(15, 20, 30, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    border-radius: 12px;
+    padding: 10px 16px;
+    font-size: 12px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.88);
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity 0.2s, transform 0.2s;
+    pointer-events: none;
+    backdrop-filter: blur(12px);
+  }
+
+  .toast.show {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .download-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9998;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(20px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+  }
+
+  .download-overlay.show {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
