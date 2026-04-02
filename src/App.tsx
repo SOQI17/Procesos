@@ -10,7 +10,7 @@ import {
   User, BarChart3, Share2, Trophy, AlertCircle, BookOpen, RefreshCw, Cpu, Activity, Database, Brain,
   FileCode, CheckCircle2, Layers, Users, Copy, Terminal, FileSpreadsheet, X
 } from 'lucide-react';
-import { generateProcessDiagram, analyzeProcessFromText, extractTextFromFile } from './services/geminiService';
+import { generateProcessDiagram, analyzeProcessFromText, extractTextFromFile, setApiKey, getStoredApiKey } from './services/geminiService';
 
 import GapAnalyzer from './components/GapAnalyzer';
 
@@ -33,9 +33,11 @@ const menuItems = [
 const Sidebar = ({
   activeId,
   onNavigate,
+  onOpenSettings
 }: {
   activeId: string;
   onNavigate: (id: string) => void;
+  onOpenSettings: () => void;
 }) => {
   return (
     <aside className="w-60 bg-bg-sidebar border-r border-white/[0.06] flex flex-col h-screen sticky top-0 shrink-0">
@@ -115,7 +117,7 @@ const Sidebar = ({
 
       {/* Footer */}
       <div className="px-3 pb-4 pt-3 border-t border-white/[0.06]">
-        <button className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-[12.5px] font-medium text-white/25 hover:text-white/60 hover:bg-white/[0.04] transition-all duration-150 group">
+        <button onClick={onOpenSettings} className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-[12.5px] font-medium text-white/25 hover:text-white/60 hover:bg-white/[0.04] transition-all duration-150 group">
           <Settings className="w-3.5 h-3.5 shrink-0 group-hover:rotate-45 transition-transform duration-300" />
           <span>Configuración</span>
         </button>
@@ -2354,12 +2356,77 @@ const ProcessAnalyzer = () => {
 
 // --- App.tsx ---
 
+const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
+  const [apiKey, setLocalApiKey] = useState('');
+
+  useEffect(() => {
+    if (isOpen) {
+      setLocalApiKey(getStoredApiKey());
+    }
+  }, [isOpen]);
+
+  const handleSave = () => {
+    setApiKey(apiKey);
+    onClose();
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.95 }}
+        className="bg-bg-sidebar border border-white/[0.06] rounded-2xl p-6 w-full max-w-md shadow-2xl"
+      >
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-semibold text-white flex items-center gap-2">
+            <Settings className="w-5 h-5 text-blue-400" /> Configuración
+          </h2>
+          <button onClick={onClose} className="text-slate-400 hover:text-white transition-colors">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-slate-300 mb-2">
+              Gemini API Key
+            </label>
+            <input
+              type="password"
+              value={apiKey}
+              onChange={(e) => setLocalApiKey(e.target.value)}
+              placeholder="AIzaSy..."
+              className="w-full bg-bg-dark border border-white/[0.06] rounded-xl px-4 py-2.5 text-slate-200 focus:outline-none focus:border-blue-500/50"
+            />
+            <p className="text-xs text-slate-500 mt-2">
+              Tu API key se guarda localmente en tu navegador. Es necesaria para usar las funciones de IA si no hay una configurada en el entorno.
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-8 flex justify-end gap-3">
+          <button onClick={onClose} className="px-4 py-2 text-sm font-medium text-slate-300 hover:text-white transition-colors">
+            Cancelar
+          </button>
+          <button onClick={handleSave} className="btn-primary px-6 py-2 text-sm">
+            Guardar
+          </button>
+        </div>
+      </motion.div>
+    </div>
+  );
+};
+
 export default function App() {
   const [activeTab, setActiveTab] = useState('diagramador');
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   return (
     <div className="flex min-h-screen bg-bg-dark text-slate-200 antialiased">
-      <Sidebar activeId={activeTab} onNavigate={setActiveTab} />
+      <Sidebar activeId={activeTab} onNavigate={setActiveTab} onOpenSettings={() => setIsSettingsOpen(true)} />
 
       <div className="flex-1 flex flex-col min-w-0">
         <TopBar />
@@ -2387,6 +2454,10 @@ export default function App() {
             )}
         </main>
       </div>
+      
+      <AnimatePresence>
+        {isSettingsOpen && <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />}
+      </AnimatePresence>
     </div>
   );
 }

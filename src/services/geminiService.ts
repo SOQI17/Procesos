@@ -1,6 +1,21 @@
 import { GoogleGenAI } from "@google/genai";
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
+let ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
+
+export const setApiKey = (key: string) => {
+  ai = new GoogleGenAI({ apiKey: key || process.env.GEMINI_API_KEY || '' });
+  localStorage.setItem('gemini_api_key', key);
+};
+
+export const getStoredApiKey = () => {
+  return localStorage.getItem('gemini_api_key') || '';
+};
+
+// Initialize with stored key if available
+const storedKey = getStoredApiKey();
+if (storedKey) {
+  ai = new GoogleGenAI({ apiKey: storedKey });
+}
 
 // ─── Diagramador ────────────────────────────────────────────────────────────
 
