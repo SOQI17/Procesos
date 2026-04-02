@@ -21,7 +21,7 @@ if (storedKey) {
 
 export const generateProcessDiagram = async (input: string) => {
   const response = await ai.models.generateContent({
-    model: "gemini-2.0-flash",
+    model: "gemini-3.1-flash-lite-preview",
     contents: `Analiza el siguiente texto y extrae un proceso de negocio estructurado para BPMN 2.0.
 Devuelve una lista de pasos numerados con los actores involucrados.
 Sé claro y conciso. Usa formato Markdown.
@@ -36,7 +36,7 @@ Texto: ${input}`,
 
 export const analyzeProcessFromText = async (text: string): Promise<any> => {
   const response = await ai.models.generateContent({
-    model: "gemini-2.0-flash",
+    model: "gemini-3.1-flash-lite-preview",
     contents: `Eres un experto Consultor BPM y especialista en Bizagi Modeler. Tu tarea es analizar de forma SUPER MINUCIOSA y EXHAUSTIVA el siguiente documento de proceso. Debes extraer absolutamente toda la información estructurada, sin omitir detalles, enfocándote en mapear perfectamente los atributos Básicos y Extendidos de Bizagi.
 
 Instrucciones Críticas:
@@ -129,7 +129,7 @@ ${text}`,
 
 export const analyzeProcessGap = async (text: string): Promise<any> => {
   const response = await ai.models.generateContent({
-    model: "gemini-2.0-flash",
+    model: "gemini-3.1-flash-lite-preview",
     contents: `Eres un auditor experto en BPM, BPMN 2.0 y operación hotelera Marriott International (Tier 1).
 Tu análisis tiene peso corporativo. No produces texto genérico. Cada afirmación es técnica, específica y accionable.
 
@@ -251,7 +251,7 @@ export const extractTextFromFile = async (
   mimeType: string
 ): Promise<string> => {
   const response = await ai.models.generateContent({
-    model: "gemini-2.0-flash",
+    model: "gemini-3.1-flash-lite-preview",
     contents: [
       {
         inlineData: { data: base64Data, mimeType }
