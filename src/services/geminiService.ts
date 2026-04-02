@@ -112,6 +112,123 @@ ${text}`,
   return JSON.parse(clean);
 };
 
+export const analyzeProcessGap = async (text: string): Promise<any> => {
+  const response = await ai.models.generateContent({
+    model: "gemini-2.0-flash",
+    contents: `Eres un auditor experto en BPM, BPMN 2.0 y operación hotelera Marriott International (Tier 1).
+Tu análisis tiene peso corporativo. No produces texto genérico. Cada afirmación es técnica, específica y accionable.
+
+PROCESO A ANALIZAR:
+${text}
+
+---
+
+INSTRUCCIONES DE ANÁLISIS:
+
+Evalúa el proceso anterior bajo los siguientes ejes. Responde EXACTAMENTE en la estructura JSON definida al final. No agregues texto fuera del JSON.
+
+EJES DE EVALUACIÓN:
+1. Coherencia lógica del flujo end-to-end (inicio → fin sin ambigüedades)
+2. Corrección BPMN 2.0: tipos de eventos, subtipos de tareas (user/send/service/manual/businessRule/script), gateways (XOR/OR/AND/Event-Based), marcadores de loop/compensation, eventos intermedios
+3. Alineación operativa Marriott: GXP (Guest Experience Platform), Qualtrics, OPERA/PMS, Service Recovery, MOD, Front Office, Rooms Division, F&B si aplica
+4. Roles y lanes: coherencia, unicidad de responsabilidad, ausencia de áreas no operativas en procesos operativos
+5. Gaps de control: ausencia de SLAs, escalaciones, validaciones, notificaciones automáticas
+6. Riesgos operativos: puntos de falla, cuellos de botella, ausencia de manejo de excepciones
+
+REGLAS CRÍTICAS:
+- GXP es el sistema eje de gestión de feedback, service recovery y alertas de experiencia. Qualtrics es la herramienta de captura de encuestas post-estancia. No son intercambiables.
+- Marketing NO participa en procesos operativos de Guest Experience o Service Recovery.
+- MOD (Manager on Duty) tiene rol en escalaciones de service recovery, no en captura de feedback rutinario.
+- Cada gateway XOR debe tener exactamente 2 flujos de salida etiquetados. Gateways sin etiquetas son errores críticos.
+- Un proceso válido tiene exactamente 1 start event y al menos 1 end event. Múltiples end events deben estar justificados.
+
+RESPONDE ÚNICAMENTE CON ESTE JSON (sin markdown, sin texto adicional):
+
+{
+  "diagnostico_general": {
+    "estado": "correcto | parcialmente_correcto | incorrecto",
+    "nivel_madurez": "basico | intermedio | avanzado",
+    "resumen_ejecutivo": "string — máximo 3 oraciones, tono corporativo"
+  },
+  "errores_criticos": [
+    {
+      "id": "EC-01",
+      "elemento": "nombre del elemento afectado",
+      "descripcion": "qué está mal",
+      "impacto": "por qué es crítico",
+      "correccion": "qué debe hacerse"
+    }
+  ],
+  "oportunidades_mejora": [
+    {
+      "id": "OM-01",
+      "tipo": "logica_flujo | bpmn | operacion | control | automatizacion",
+      "descripcion": "string",
+      "beneficio": "string"
+    }
+  ],
+  "validacion_sistemas_marriott": {
+    "GXP": {
+      "uso_correcto": true,
+      "observaciones": "string"
+    },
+    "Qualtrics": {
+      "uso_correcto": true,
+      "observaciones": "string"
+    },
+    "OPERA_PMS": {
+      "uso_correcto": true,
+      "observaciones": "string"
+    },
+    "Service_Recovery": {
+      "uso_correcto": true,
+      "observaciones": "string"
+    }
+  },
+  "correcciones_flujo": {
+    "agregar": ["string"],
+    "eliminar": ["string"],
+    "reordenar": ["string"],
+    "gateways_faltantes": ["string"],
+    "gateways_sobrantes": ["string"]
+  },
+  "validacion_lanes": {
+    "lanes_correctos": true,
+    "problemas_detectados": ["string"],
+    "estructura_ideal": ["string"]
+  },
+  "flujo_corregido": {
+    "nombre_proceso": "string",
+    "codigo_proceso": "string",
+    "pasos": [
+      {
+        "orden": 1,
+        "lane": "string",
+        "nombre": "string",
+        "tipo": "startEvent | task | gateway | endEvent | intermediateEvent",
+        "subtipo": "user | send | service | manual | businessRule | script | xor | or | and | terminateEnd | messageEnd",
+        "descripcion": "string",
+        "performers": "string",
+        "accountable": "string",
+        "sistema": "GXP | Qualtrics | OPERA | POS | Manual | N/A"
+      }
+    ]
+  },
+  "recomendaciones_corporativas": {
+    "controles_sugeridos": ["string"],
+    "riesgos_identificados": ["string"],
+    "buenas_practicas": ["string"],
+    "kpis_sugeridos": ["string"]
+  }
+}`,
+    config: { temperature: 0.1 }
+  });
+
+  const raw = response.text || '';
+  const clean = raw.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+  return JSON.parse(clean);
+};
+
 // ─── Analizador — extrae texto de imagen/PDF via base64 ─────────────────────
 
 export const extractTextFromFile = async (

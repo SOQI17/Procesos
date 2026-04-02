@@ -12,6 +12,8 @@ import {
 } from 'lucide-react';
 import { generateProcessDiagram, analyzeProcessFromText, extractTextFromFile } from './services/geminiService';
 
+import GapAnalyzer from './components/GapAnalyzer';
+
 // --- Sidebar.tsx ---
 
 function cn(...inputs: ClassValue[]) {
@@ -1418,59 +1420,8 @@ const generateBPMNXML = (processName: string, steps: any[]) => {
   });
   sequences += `\n    <bpmn:sequenceFlow id="Flow_${steps.length}" sourceRef="${getPrefix(steps[steps.length - 1])}_${steps.length - 1}" targetRef="EndEvent_1" />`;
 
-  let diShapes = `
-      <bpmndi:BPMNShape id="Participant_1_di" bpmnElement="Participant_1" isHorizontal="true">
-        <dc:Bounds x="50" y="0" width="${LANE_WIDTH + 100}" height="${lanes.length * LANE_HEIGHT}" />
-      </bpmndi:BPMNShape>`;
-  diShapes += lanes.map((lane, idx) => `
-      <bpmndi:BPMNShape id="Lane_${idx}_di" bpmnElement="Lane_${idx}" isHorizontal="true">
-        <dc:Bounds x="80" y="${idx * LANE_HEIGHT}" width="${LANE_WIDTH + 70}" height="${LANE_HEIGHT}" />
-      </bpmndi:BPMNShape>`).join('');
-  diShapes += `
-      <bpmndi:BPMNShape id="StartEvent_1_di" bpmnElement="StartEvent_1">
-        <dc:Bounds x="120" y="${laneYMap[steps[0].lane] + LANE_HEIGHT / 2 - EVENT_SIZE / 2}" width="${EVENT_SIZE}" height="${EVENT_SIZE}" />
-      </bpmndi:BPMNShape>`;
-  diShapes += steps.map((s, idx) => {
-    const x = START_X + idx * HORIZONTAL_SPACING;
-    const id = `${getPrefix(s)}_${idx}`;
-    if (s.type === 'gateway') {
-      const y = laneYMap[s.lane] + LANE_HEIGHT / 2 - GATEWAY_SIZE / 2;
-      return `\n      <bpmndi:BPMNShape id="${id}_di" bpmnElement="${id}" isMarkerVisible="true"><dc:Bounds x="${x}" y="${y}" width="${GATEWAY_SIZE}" height="${GATEWAY_SIZE}" /></bpmndi:BPMNShape>`;
-    }
-    const y = laneYMap[s.lane] + LANE_HEIGHT / 2 - ACTIVITY_HEIGHT / 2;
-    return `\n      <bpmndi:BPMNShape id="${id}_di" bpmnElement="${id}"><dc:Bounds x="${x}" y="${y}" width="${ACTIVITY_WIDTH}" height="${ACTIVITY_HEIGHT}" /></bpmndi:BPMNShape>`;
-  }).join('');
-  diShapes += `
-      <bpmndi:BPMNShape id="EndEvent_1_di" bpmnElement="EndEvent_1">
-        <dc:Bounds x="${START_X + steps.length * HORIZONTAL_SPACING + 50}" y="${laneYMap[steps[steps.length - 1].lane] + LANE_HEIGHT / 2 - EVENT_SIZE / 2}" width="${EVENT_SIZE}" height="${EVENT_SIZE}" />
-      </bpmndi:BPMNShape>`;
-
-  let diEdges = steps.map((s, idx) => {
-    const prev = steps[idx - 1];
-    const sourceX = idx === 0 ? 156 : START_X + (idx - 1) * HORIZONTAL_SPACING + (prev.type === 'gateway' ? GATEWAY_SIZE : ACTIVITY_WIDTH);
-    const sourceY = idx === 0 ? laneYMap[steps[0].lane] + LANE_HEIGHT / 2 : laneYMap[prev.lane] + LANE_HEIGHT / 2;
-    const targetX = START_X + idx * HORIZONTAL_SPACING;
-    const targetY = laneYMap[s.lane] + LANE_HEIGHT / 2;
-    const label = idx > 0 && steps[idx - 1].type === 'gateway'
-      ? `\n        <bpmndi:BPMNLabel><dc:Bounds x="${sourceX + 10}" y="${sourceY - 20}" width="15" height="14" /></bpmndi:BPMNLabel>` : '';
-    return `\n      <bpmndi:BPMNEdge id="Flow_${idx}_di" bpmnElement="Flow_${idx}"><di:waypoint x="${sourceX}" y="${sourceY}" /><di:waypoint x="${targetX}" y="${targetY}" />${label}</bpmndi:BPMNEdge>`;
-  }).join('');
-
-  steps.forEach((s, idx) => {
-    if (s.type === 'gateway' && idx > 0) {
-      const gx = START_X + idx * HORIZONTAL_SPACING + GATEWAY_SIZE / 2;
-      const gy = laneYMap[s.lane] + LANE_HEIGHT / 2 + GATEWAY_SIZE / 2;
-      const px = START_X + (idx - 1) * HORIZONTAL_SPACING + ACTIVITY_WIDTH / 2;
-      const py = laneYMap[steps[idx - 1].lane] + LANE_HEIGHT / 2 + ACTIVITY_HEIGHT / 2;
-      diEdges += `\n      <bpmndi:BPMNEdge id="Flow_${idx}_No_di" bpmnElement="Flow_${idx}_No"><di:waypoint x="${gx}" y="${gy}" /><di:waypoint x="${gx}" y="${gy + 60}" /><di:waypoint x="${px}" y="${py + 60}" /><di:waypoint x="${px}" y="${py}" /><bpmndi:BPMNLabel><dc:Bounds x="${gx + 5}" y="${gy + 10}" width="15" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>`;
-    }
-  });
-
-  const last = steps[steps.length - 1];
-  diEdges += `\n      <bpmndi:BPMNEdge id="Flow_${steps.length}_di" bpmnElement="Flow_${steps.length}"><di:waypoint x="${START_X + (steps.length - 1) * HORIZONTAL_SPACING + (last.type === 'gateway' ? GATEWAY_SIZE : ACTIVITY_WIDTH)}" y="${laneYMap[last.lane] + LANE_HEIGHT / 2}" /><di:waypoint x="${START_X + steps.length * HORIZONTAL_SPACING + 50}" y="${laneYMap[last.lane] + LANE_HEIGHT / 2}" /></bpmndi:BPMNEdge>`;
-
   return `<?xml version="1.0" encoding="UTF-8"?>
-<bpmn:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_1" targetNamespace="http://bpmn.io/schema/bpmn">
+<bpmn:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" id="Definitions_1" targetNamespace="http://bpmn.io/schema/bpmn">
   <bpmn:collaboration id="Collaboration_1">
     <bpmn:participant id="Participant_1" name="${escapedProcessName}" processRef="Process_1" />
   </bpmn:collaboration>
@@ -1482,10 +1433,6 @@ const generateBPMNXML = (processName: string, steps: any[]) => {
     <bpmn:endEvent id="EndEvent_1" name="Fin"><bpmn:incoming>Flow_${steps.length}</bpmn:incoming></bpmn:endEvent>
     ${sequences}
   </bpmn:process>
-  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
-    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Collaboration_1">${diShapes}${diEdges}
-    </bpmndi:BPMNPlane>
-  </bpmndi:BPMNDiagram>
 </bpmn:definitions>`;
 };
 
@@ -2421,9 +2368,11 @@ export default function App() {
           {activeTab === 'diagramador' && <ProcessGenerator />}
           {activeTab === 'diagnostico' && <MaturityDiagnostic />}
           {activeTab === 'analyzer'    && <ProcessAnalyzer />}
+          {activeTab === 'gap'         && <GapAnalyzer />}
           {activeTab !== 'diagramador' &&
             activeTab !== 'diagnostico' &&
-            activeTab !== 'analyzer' && (
+            activeTab !== 'analyzer' &&
+            activeTab !== 'gap' && (
               <div className="flex flex-col items-center justify-center h-full gap-3 text-white/10">
                 <div className="w-12 h-12 rounded-2xl border border-white/[0.06] flex items-center justify-center">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
